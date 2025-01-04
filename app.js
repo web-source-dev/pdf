@@ -2,14 +2,16 @@ const express = require('express');
 const puppeteer = require('puppeteer');
 
 const app = express();
-const port = process.env.PORT;
+const PORT = process.env.PORT || 3000; // Default to 3000 if PORT is not set
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Define the PDF generation function
 async function exportWebsiteAsPdf(url) {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox'], // Required for running Puppeteer in restricted environments like Render
+    });
     const page = await browser.newPage();
 
     await page.goto(url, { waitUntil: 'networkidle2' });
@@ -22,10 +24,13 @@ async function exportWebsiteAsPdf(url) {
     await browser.close();
     return pdfBuffer;
 }
+
+// Test route
 app.get('/', (req, res) => {
     res.send('Hello World!');
-})
-// Define the POST route
+});
+
+// Define the POST route for PDF generation
 app.post('/pdf', async (req, res) => {
     console.log(req.body);
 
